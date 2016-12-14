@@ -5,9 +5,17 @@
 #ifndef TINYLOG_TINYLOG_H
 #define TINYLOG_TINYLOG_H
 
+#include "LogStream.h"
 
 class TinyLog {
+public:
+    TinyLog();
 
+    ~TinyLog();
+
+
+private:
+    LogStream *pt_logstream_;
 };
 
 
