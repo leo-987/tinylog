@@ -7,6 +7,7 @@
 
 
 #include <cstdint>
+#include <string>
 
 class Buffer {
 public:
@@ -14,7 +15,7 @@ public:
 
     ~Buffer();
 
-    int32_t Append();
+    int32_t TryAppend(const std::string &ref_log);
 
     void Clear();
 
