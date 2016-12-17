@@ -10,6 +10,14 @@
 
 class Utils {
 public:
+    enum LogLevel {
+        TRACE   = 0,
+        DEBUG   = 1,
+        INFO    = 2,
+        WARNING = 3,
+        ERROR   = 4,
+    };
+
     static void GetCurrentTime(std::string &ref_time);
 
     static void GetCurrentTime(struct timeval *tv, struct tm **tm);

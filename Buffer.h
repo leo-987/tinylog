@@ -23,6 +23,8 @@ public:
 
     uint64_t Capacity();
 
+    int32_t Flush(int fd);
+
 private:
     char *pt_data_;
 

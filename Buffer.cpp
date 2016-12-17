@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <string>
+#include <unistd.h>
 
 #include "Buffer.h"
 
@@ -21,6 +22,7 @@ Buffer::~Buffer()
 
 /*
  * Append ref_log to buffer.
+ * This function should be locked.
  * return value:
  * 0  : success
  * -1 : fail
@@ -49,4 +51,32 @@ uint64_t Buffer::Size()
 uint64_t Buffer::Capacity()
 {
     return l_capacity_;
+}
+
+int32_t Buffer::Flush(int fd)
+{
+    ssize_t n_write = 0;
+    while ((n_write = write(fd, pt_data_ + n_write, l_size_ - n_write)) != 0)
+    {
+        if ((n_write < 0) && (errno != EINTR))
+        {
+            /* error */
+            break;
+        }
+        else if (n_write == l_size_)
+        {
+            /* All write. */
+            break;
+        }
+        else if (n_write > 0)
+        {
+            /* Half write. */
+        }
+    }
+
+    /* error */
+    if (n_write < 0)
+        return -1;
+
+    return 0;
 }
