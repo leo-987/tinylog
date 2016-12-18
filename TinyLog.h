@@ -26,7 +26,7 @@ public:
 
     Utils::LogLevel GetLogLevel() { return e_log_level_; }
 
-    LogStream& GetLogStream(char *pt_file, int i_line, char *pt_func, Utils::LogLevel e_log_level);
+    LogStream& GetLogStream(const char *pt_file, int i_line, const char *pt_func, Utils::LogLevel e_log_level);
 
 private:
     TinyLog(TinyLog const &);
@@ -42,10 +42,12 @@ private:
     Utils::LogLevel e_log_level_;
 };
 
-#define g_tinylog TinyLog::GetInstance()
+#define g_tinylog (TinyLog::GetInstance())
 
-#define LOG_INFO (g_tinylog.GetLogLevel() <= TinyLog::INFO)\
-        g_tinylog.GetLogStream(__FILE__, __LINE__, __func__, TinyLog::INFO)
+#define LOG_INFO if (g_tinylog.GetLogLevel() <= Utils::INFO)\
+        g_tinylog.GetLogStream(__FILE__, __LINE__, __func__, Utils::INFO)
 
+#define LOG_WARNING if (g_tinylog.GetLogLevel() <= Utils::WARNING) \
+        g_tinylog.GetLogStream(__FILE__, __LINE__, __func__, Utils::WARNING)
 
 #endif //TINYLOG_TINYLOG_H

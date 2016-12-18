@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "LogStream.h"
 #include "Config.h"
@@ -20,6 +21,8 @@ LogStream::LogStream()
 
     pt_front_buff_ = new Buffer(BUFFER_SIZE);
     pt_back_buff_  = new Buffer(BUFFER_SIZE);
+
+    Utils::GetCurrentTime(&tv_base_, &pt_tm_base_);
 }
 
 LogStream::~LogStream()
@@ -51,12 +54,21 @@ void LogStream::WriteBuffer()
     pt_back_buff_->Clear();
 }
 
-void LogStream::SetPrefix(char *pt_file, int i_line, char *pt_func, Utils::LogLevel e_log_level)
+void LogStream::SetPrefix(const char *pt_file, int i_line, const char *pt_func, Utils::LogLevel e_log_level)
 {
     pt_file_ = pt_file;
-    i_line_ = i_line;
+    i_line_  = i_line;
     pt_func_ = pt_func;
-    e_log_level_ = e_log_level;
+
+    switch (e_log_level)
+    {
+        case Utils::DEBUG  : str_log_level_ = "[DEBUG  ]"; break;
+        case Utils::INFO   : str_log_level_ = "[INFO   ]"; break;
+        case Utils::WARNING: str_log_level_ = "[WARNING]"; break;
+        case Utils::ERROR  : str_log_level_ = "[ERROR  ]"; break;
+        case Utils::FATAL  : str_log_level_ = "[FATAL  ]"; break;
+        default: break;
+    }
 }
 
 LogStream& LogStream::operator<<(const std::string &log)
@@ -64,26 +76,41 @@ LogStream& LogStream::operator<<(const std::string &log)
     struct timeval tv_now;
     gettimeofday(&tv_now, NULL);
 
-    int new_sec = pt_tm_base_->tm_sec + int(tv_now.tv_sec - tv_base_.tv_sec);
-    if (new_sec >= 60)
+    if (tv_now.tv_sec != tv_base_.tv_sec)
     {
-        pt_tm_base_->tm_sec = new_sec % 60;
-        int new_min = pt_tm_base_->tm_min + new_sec / 60;
-        if (new_min >= 60)
+        int new_sec = pt_tm_base_->tm_sec + int(tv_now.tv_sec - tv_base_.tv_sec);
+        if (new_sec >= 60)
         {
-            pt_tm_base_->tm_min = new_min % 60;
-            //int new_hour = pt_tm_base_->tm_hour + new_min / 60;
-            // TODO
+            pt_tm_base_->tm_sec = new_sec % 60;
+            int new_min = (pt_tm_base_->tm_min + new_sec) / 60;
+            if (new_min >= 60)
+            {
+                pt_tm_base_->tm_min = new_min % 60;
+                //int new_hour = (pt_tm_base_->tm_hour + new_min) / 60;
+                // TODO
+            }
+            else
+            {
+                pt_tm_base_->tm_min = new_min;
+            }
+        }
+        else
+        {
+            pt_tm_base_->tm_sec = new_sec;
         }
     }
 
+    tv_base_ = tv_now;
+
     pthread_mutex_lock(&g_mutex);
 
-    if (pt_front_buff_->TryAppend(log) < 0)
+    if (pt_front_buff_->TryAppend(pt_tm_base_, (long)tv_now.tv_usec, pt_file_, i_line_, pt_func_, str_log_level_, log) < 0)
     {
+
         SwapBuffer();
+        g_already_swap = true;
+        pt_front_buff_->TryAppend(pt_tm_base_, (long)tv_now.tv_usec, pt_file_, i_line_, pt_func_, str_log_level_, log);
     }
-    pt_front_buff_->TryAppend(log);
 
     pthread_cond_signal(&g_cond);
 

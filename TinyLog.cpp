@@ -3,10 +3,8 @@
 //
 
 #include <time.h>
-#include <sys/_timeval.h>
 
 #include "TinyLog.h"
-
 #include "Config.h"
 
 pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -17,6 +15,8 @@ static void *ThreadFunc(void *pt_arg)
 {
     TinyLog *pt_tinylog = (TinyLog *)pt_arg;
     pt_tinylog->MainLoop();
+
+    return NULL;
 }
 
 TinyLog::TinyLog()
@@ -34,7 +34,7 @@ TinyLog::~TinyLog()
     delete(pt_logstream_);
 }
 
-LogStream& TinyLog::GetLogStream(char *pt_file, int i_line, char *pt_func, Utils::LogLevel e_log_level)
+LogStream& TinyLog::GetLogStream(const char *pt_file, int i_line, const char *pt_func, Utils::LogLevel e_log_level)
 {
     pt_logstream_->SetPrefix(pt_file, i_line, pt_func, e_log_level);
     return *pt_logstream_;
@@ -42,7 +42,6 @@ LogStream& TinyLog::GetLogStream(char *pt_file, int i_line, char *pt_func, Utils
 
 int32_t TinyLog::MainLoop()
 {
-    Utils::GetCurrentTime(&pt_logstream_->tv_base_, &pt_logstream_->pt_tm_base_);
     struct timespec st_time_out;
 
     while (b_run_)

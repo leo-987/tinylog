@@ -5,6 +5,7 @@
 #ifndef TINYLOG_UTILS_H
 #define TINYLOG_UTILS_H
 
+#include <iostream>
 #include <sys/time.h>
 #include <string>
 
@@ -16,7 +17,10 @@ public:
         INFO    = 2,
         WARNING = 3,
         ERROR   = 4,
+        FATAL   = 5,
     };
+
+    static std::string GetCurrentTime();
 
     static void GetCurrentTime(std::string &ref_time);
 

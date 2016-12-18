@@ -22,7 +22,7 @@ public:
 
     void WriteBuffer();
 
-    void SetPrefix(char *pt_file, int i_line, char *pt_func, Utils::LogLevel e_log_level);
+    void SetPrefix(const char *pt_file, int i_line, const char *pt_func, Utils::LogLevel e_log_level);
 
     LogStream& operator<<(const std::string &log);
 
@@ -33,13 +33,13 @@ private:
 
     int log_file_fd_;
 
-    char *pt_file_;
+    const char *pt_file_;
 
     int i_line_;
 
-    char *pt_func_;
+    const char *pt_func_;
 
-    Utils::LogLevel e_log_level_;
+    std::string str_log_level_;
 
     struct timeval tv_base_;
 
