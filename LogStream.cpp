@@ -82,12 +82,19 @@ LogStream& LogStream::operator<<(const std::string &log)
         if (new_sec >= 60)
         {
             pt_tm_base_->tm_sec = new_sec % 60;
-            int new_min = (pt_tm_base_->tm_min + new_sec) / 60;
+            int new_min = pt_tm_base_->tm_min + new_sec / 60;
             if (new_min >= 60)
             {
                 pt_tm_base_->tm_min = new_min % 60;
-                //int new_hour = (pt_tm_base_->tm_hour + new_min) / 60;
-                // TODO
+                int new_hour = pt_tm_base_->tm_hour + new_min / 60;
+                if (new_hour >= 24)
+                {
+                    Utils::GetCurrentTime(&tv_base_, &pt_tm_base_);
+                }
+                else
+                {
+                    pt_tm_base_->tm_mday = new_hour;
+                }
             }
             else
             {
@@ -104,12 +111,11 @@ LogStream& LogStream::operator<<(const std::string &log)
 
     pthread_mutex_lock(&g_mutex);
 
-    if (pt_front_buff_->TryAppend(pt_tm_base_, (long)tv_now.tv_usec, pt_file_, i_line_, pt_func_, str_log_level_, log) < 0)
+    if (pt_front_buff_->TryAppend(pt_tm_base_, (long)tv_base_.tv_usec, pt_file_, i_line_, pt_func_, str_log_level_, log) < 0)
     {
-
         SwapBuffer();
         g_already_swap = true;
-        pt_front_buff_->TryAppend(pt_tm_base_, (long)tv_now.tv_usec, pt_file_, i_line_, pt_func_, str_log_level_, log);
+        pt_front_buff_->TryAppend(pt_tm_base_, (long)tv_base_.tv_usec, pt_file_, i_line_, pt_func_, str_log_level_, log);
     }
 
     pthread_cond_signal(&g_cond);

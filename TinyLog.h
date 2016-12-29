@@ -24,7 +24,9 @@ public:
 
     int32_t MainLoop();
 
-    Utils::LogLevel GetLogLevel() { return e_log_level_; }
+    void SetLogLevel(Utils::LogLevel e_log_level);
+
+    Utils::LogLevel GetLogLevel();
 
     LogStream& GetLogStream(const char *pt_file, int i_line, const char *pt_func, Utils::LogLevel e_log_level);
 

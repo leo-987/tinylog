@@ -21,7 +21,7 @@ std::string Utils::GetCurrentTime()
             time_ptr->tm_hour,
             time_ptr->tm_min,
             time_ptr->tm_sec,
-            (long) tv.tv_usec / 1000);
+            (long)tv.tv_usec / 1000);
 
     return std::string(buff);
 }

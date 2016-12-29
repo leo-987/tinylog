@@ -5,8 +5,7 @@
 using namespace std;
 
 int main() {
-    //if (g_tinylog.Init(INFO) < 0)
-    //    return -1;
+    g_tinylog.SetLogLevel(Utils::INFO);
 
     cerr << "start time: " << Utils::GetCurrentTime() << endl;
 
