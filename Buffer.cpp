@@ -45,12 +45,18 @@ int32_t Buffer::TryAppend(const std::string &ref_log)
  * This function should be locked.
  * return value:
  * 0  : success
- * -1 : fail
+ * -1 : fail, buffer full
  */
 int32_t Buffer::TryAppend(struct tm *pt_time, long u_sec, const char *pt_file, int i_line,
                           const char *pt_func, std::string &str_log_level, const std::string &str_log)
 {
-    std::string::size_type append_len = 28 + strlen(pt_file) + 4 + strlen(pt_func) + 9 + str_log.length();
+    /*
+     * date: 11 byte
+     * time: 13 byte
+     * line number: at most 5 byte
+     * log level: 9 byte
+     */
+    std::string::size_type append_len = 24 + strlen(pt_file) + 5 + strlen(pt_func) + 9 + str_log.length();
 
     if (append_len + l_size_ > l_capacity_)
     {
@@ -93,21 +99,21 @@ int32_t Buffer::Flush(int fd)
     {
         if ((n_write < 0) && (errno != EINTR))
         {
-            /* error */
+            // error
             break;
         }
         else if (n_write == l_size_)
         {
-            /* All write. */
+            // All write
             break;
         }
         else if (n_write > 0)
         {
-            /* Half write. */
+            // Half write
         }
     }
 
-    /* error */
+    // error
     if (n_write < 0)
         return -1;
 

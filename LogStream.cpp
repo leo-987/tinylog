@@ -54,6 +54,7 @@ void LogStream::WriteBuffer()
     pt_back_buff_->Clear();
 }
 
+inline
 void LogStream::SetPrefix(const char *pt_file, int i_line, const char *pt_func, Utils::LogLevel e_log_level)
 {
     pt_file_ = pt_file;
@@ -67,7 +68,7 @@ void LogStream::SetPrefix(const char *pt_file, int i_line, const char *pt_func, 
         case Utils::WARNING: str_log_level_ = "[WARNING]"; break;
         case Utils::ERROR  : str_log_level_ = "[ERROR  ]"; break;
         case Utils::FATAL  : str_log_level_ = "[FATAL  ]"; break;
-        default: break;
+        default: str_log_level_ = "[INFO   ]"; break;
     }
 }
 
