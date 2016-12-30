@@ -66,6 +66,7 @@ int32_t TinyLog::MainLoop()
             if (pthread_cond_timedwait(&g_cond, &g_mutex, &st_time_out) == ETIMEDOUT)
             {
                 pt_logstream_->SwapBuffer();
+                pt_logstream_->UpdateBaseTime();
                 break;
             }
         }

@@ -23,24 +23,6 @@ Buffer::~Buffer()
 }
 
 /*
- * Append ref_log to buffer.
- * This function should be locked.
- * return value:
- * 0  : success
- * -1 : fail
- */
-int32_t Buffer::TryAppend(const std::string &ref_log)
-{
-    if (l_size_ + ref_log.length() > l_capacity_)
-    {
-        return -1;
-    }
-
-    memcpy(pt_data_ + l_size_, ref_log.c_str(), ref_log.length());
-    return 0;
-}
-
-/*
  * Append time and log to buffer.
  * This function should be locked.
  * return value:
@@ -48,7 +30,7 @@ int32_t Buffer::TryAppend(const std::string &ref_log)
  * -1 : fail, buffer full
  */
 int32_t Buffer::TryAppend(struct tm *pt_time, long u_sec, const char *pt_file, int i_line,
-                          const char *pt_func, std::string &str_log_level, const std::string &str_log)
+                          const char *pt_func, std::string &str_log_level, const char *pt_log)
 {
     /*
      * date: 11 byte
@@ -56,7 +38,7 @@ int32_t Buffer::TryAppend(struct tm *pt_time, long u_sec, const char *pt_file, i
      * line number: at most 5 byte
      * log level: 9 byte
      */
-    std::string::size_type append_len = 24 + strlen(pt_file) + 5 + strlen(pt_func) + 9 + str_log.length();
+    std::string::size_type append_len = 24 + strlen(pt_file) + 5 + strlen(pt_func) + 9 + strlen(pt_log);
 
     if (append_len + l_size_ > l_capacity_)
     {
@@ -67,7 +49,7 @@ int32_t Buffer::TryAppend(struct tm *pt_time, long u_sec, const char *pt_file, i
                            pt_time->tm_year + 1900, pt_time->tm_mon + 1, pt_time->tm_mday,
                            pt_time->tm_hour, pt_time->tm_min, pt_time->tm_sec, u_sec / 1000,
                            pt_file, i_line, pt_func, str_log_level.c_str(),
-                           str_log.c_str());
+                           pt_log);
 
     if (n_append > 0)
     {
@@ -92,6 +74,7 @@ uint64_t Buffer::Capacity()
     return l_capacity_;
 }
 
+// TODO: add epoll
 int32_t Buffer::Flush(int fd)
 {
     ssize_t n_write = 0;

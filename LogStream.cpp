@@ -54,25 +54,31 @@ void LogStream::WriteBuffer()
     pt_back_buff_->Clear();
 }
 
-inline
-void LogStream::SetPrefix(const char *pt_file, int i_line, const char *pt_func, Utils::LogLevel e_log_level)
+LogStream& LogStream::operator<<(const char *pt_log)
 {
-    pt_file_ = pt_file;
-    i_line_  = i_line;
-    pt_func_ = pt_func;
+    UpdateBaseTime();
 
-    switch (e_log_level)
+    pthread_mutex_lock(&g_mutex);
+
+    if (pt_front_buff_->TryAppend(pt_tm_base_, (long)tv_base_.tv_usec, pt_file_, i_line_, pt_func_, str_log_level_, pt_log) < 0)
     {
-        case Utils::DEBUG  : str_log_level_ = "[DEBUG  ]"; break;
-        case Utils::INFO   : str_log_level_ = "[INFO   ]"; break;
-        case Utils::WARNING: str_log_level_ = "[WARNING]"; break;
-        case Utils::ERROR  : str_log_level_ = "[ERROR  ]"; break;
-        case Utils::FATAL  : str_log_level_ = "[FATAL  ]"; break;
-        default: str_log_level_ = "[INFO   ]"; break;
+        SwapBuffer();
+        g_already_swap = true;
+        pt_front_buff_->TryAppend(pt_tm_base_, (long)tv_base_.tv_usec, pt_file_, i_line_, pt_func_, str_log_level_, pt_log);
     }
+
+    pthread_cond_signal(&g_cond);
+    pthread_mutex_unlock(&g_mutex);
+
+    return *this;
 }
 
-LogStream& LogStream::operator<<(const std::string &log)
+LogStream& LogStream::operator<<(const std::string &ref_log)
+{
+    return this->operator<<(ref_log.c_str());
+}
+
+void LogStream::UpdateBaseTime()
 {
     struct timeval tv_now;
     gettimeofday(&tv_now, NULL);
@@ -90,7 +96,7 @@ LogStream& LogStream::operator<<(const std::string &log)
                 int new_hour = pt_tm_base_->tm_hour + new_min / 60;
                 if (new_hour >= 24)
                 {
-                    Utils::GetCurrentTime(&tv_base_, &pt_tm_base_);
+                    Utils::GetCurrentTime(&tv_now, &pt_tm_base_);
                 }
                 else
                 {
@@ -106,22 +112,11 @@ LogStream& LogStream::operator<<(const std::string &log)
         {
             pt_tm_base_->tm_sec = new_sec;
         }
+
+        tv_base_ = tv_now;
     }
-
-    tv_base_ = tv_now;
-
-    pthread_mutex_lock(&g_mutex);
-
-    if (pt_front_buff_->TryAppend(pt_tm_base_, (long)tv_base_.tv_usec, pt_file_, i_line_, pt_func_, str_log_level_, log) < 0)
+    else
     {
-        SwapBuffer();
-        g_already_swap = true;
-        pt_front_buff_->TryAppend(pt_tm_base_, (long)tv_base_.tv_usec, pt_file_, i_line_, pt_func_, str_log_level_, log);
+        tv_base_.tv_usec = tv_now.tv_usec;
     }
-
-    pthread_cond_signal(&g_cond);
-
-    pthread_mutex_unlock(&g_mutex);
-
-    return *this;
 }

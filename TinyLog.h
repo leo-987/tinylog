@@ -46,10 +46,22 @@ private:
 
 #define g_tinylog (TinyLog::GetInstance())
 
+#define LOG_TRACE if (g_tinylog.GetLogLevel() <= Utils::TRACE)\
+        g_tinylog.GetLogStream(__FILE__, __LINE__, __func__, Utils::TRACE)
+
+#define LOG_DEBUG if (g_tinylog.GetLogLevel() <= Utils::DEBUG)\
+        g_tinylog.GetLogStream(__FILE__, __LINE__, __func__, Utils::DEBUG)
+
 #define LOG_INFO if (g_tinylog.GetLogLevel() <= Utils::INFO)\
         g_tinylog.GetLogStream(__FILE__, __LINE__, __func__, Utils::INFO)
 
 #define LOG_WARNING if (g_tinylog.GetLogLevel() <= Utils::WARNING) \
         g_tinylog.GetLogStream(__FILE__, __LINE__, __func__, Utils::WARNING)
+
+#define LOG_ERROR if (g_tinylog.GetLogLevel() <= Utils::ERROR) \
+        g_tinylog.GetLogStream(__FILE__, __LINE__, __func__, Utils::ERROR)
+
+#define LOG_FATAL if (g_tinylog.GetLogLevel() <= Utils::FATAL) \
+        g_tinylog.GetLogStream(__FILE__, __LINE__, __func__, Utils::FATAL)
 
 #endif //TINYLOG_TINYLOG_H

@@ -17,10 +17,8 @@ public:
 
     ~Buffer();
 
-    int32_t TryAppend(const std::string &ref_log);
-
     int32_t TryAppend(struct tm *pt_time, long u_sec, const char *pt_file, int i_line,
-                      const char *pt_func, std::string &str_log_level, const std::string &str_log);
+                      const char *pt_func, std::string &str_log_level, const char *pt_log);
 
     void Clear();
 
