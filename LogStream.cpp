@@ -23,6 +23,8 @@ LogStream::LogStream()
     pt_back_buff_  = new Buffer(BUFFER_SIZE);
 
     Utils::GetCurrentTime(&tv_base_, &pt_tm_base_);
+
+    queue_ = new LockFreeQueue();
 }
 
 LogStream::~LogStream()
@@ -50,8 +52,33 @@ void LogStream::SwapBuffer()
  */
 void LogStream::WriteBuffer()
 {
-    pt_back_buff_->Flush(log_file_fd_);
-    pt_back_buff_->Clear();
+    //pt_back_buff_->Flush(log_file_fd_);
+    //pt_back_buff_->Clear();
+
+    std::string data;
+    int ret = queue_->Pop(data);
+
+    if (ret < 0)
+        return;
+
+    ssize_t n_write = 0;
+    while ((n_write = write(log_file_fd_, data.c_str(), data.length())) != 0)
+    {
+        if ((n_write < 0) && (errno != EINTR))
+        {
+            // error
+            break;
+        }
+        else if (n_write == data.length())
+        {
+            // All write
+            break;
+        }
+        else if (n_write > 0)
+        {
+            // Half write
+        }
+    }
 }
 
 LogStream& LogStream::operator<<(const char *pt_log)
@@ -73,9 +100,25 @@ LogStream& LogStream::operator<<(const char *pt_log)
     return *this;
 }
 
-LogStream& LogStream::operator<<(const std::string &ref_log)
+LogStream& LogStream::operator<<(std::string &ref_log)
 {
-    return this->operator<<(ref_log.c_str());
+    //return this->operator<<(ref_log.c_str());
+
+    UpdateBaseTime();
+
+    char buff[256];
+    int n_append = sprintf(buff, "%d-%02d-%02d %02d:%02d:%02d.%.03ld %s %d %s %s %s\n",
+                           pt_tm_base_->tm_year + 1900, pt_tm_base_->tm_mon + 1, pt_tm_base_->tm_mday,
+                           pt_tm_base_->tm_hour, pt_tm_base_->tm_min, pt_tm_base_->tm_sec, (long)tv_base_.tv_usec / 1000,
+                           pt_file_, i_line_, pt_func_, str_log_level_.c_str(),
+                           ref_log.c_str());
+
+
+    std::string log = buff;
+
+    queue_->Push(log);
+
+    return *this;
 }
 
 void LogStream::UpdateBaseTime()

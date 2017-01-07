@@ -52,33 +52,14 @@ LogStream& TinyLog::GetLogStream(const char *pt_file, int i_line, const char *pt
 
 int32_t TinyLog::MainLoop()
 {
-    struct timespec st_time_out;
+    //struct timespec st_time_out;
 
     while (b_run_)
     {
-        st_time_out.tv_sec = pt_logstream_->tv_base_.tv_sec + TIME_OUT_SECOND;
-        st_time_out.tv_nsec = pt_logstream_->tv_base_.tv_usec * 1000;
-
-        pthread_mutex_lock(&g_mutex);
-
-        while (!g_already_swap)
-        {
-            if (pthread_cond_timedwait(&g_cond, &g_mutex, &st_time_out) == ETIMEDOUT)
-            {
-                pt_logstream_->SwapBuffer();
-                pt_logstream_->UpdateBaseTime();
-                break;
-            }
-        }
-
-        if (g_already_swap)
-        {
-            g_already_swap = false;
-        }
+        //st_time_out.tv_sec = pt_logstream_->tv_base_.tv_sec + TIME_OUT_SECOND;
+        //st_time_out.tv_nsec = pt_logstream_->tv_base_.tv_usec * 1000;
 
         pt_logstream_->WriteBuffer();
-
-        pthread_mutex_unlock(&g_mutex);
     }
 
     return 0;

@@ -9,6 +9,7 @@
 
 #include "Buffer.h"
 #include "Utils.h"
+#include "LockFreeQueue.h"
 
 class LogStream {
 public:
@@ -26,7 +27,7 @@ public:
 
     LogStream& operator<<(const char *pt_log);
 
-    LogStream& operator<<(const std::string &ref_log);
+    LogStream& operator<<(std::string &ref_log);
 
     void UpdateBaseTime();
 private:
@@ -48,6 +49,8 @@ private:
     struct timeval tv_base_;
 
     struct tm *pt_tm_base_;
+
+    LockFreeQueue *queue_;
 };
 
 inline
